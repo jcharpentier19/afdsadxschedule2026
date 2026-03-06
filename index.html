@@ -335,6 +335,7 @@
   }
   .routine-card {
     flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     width: 100%;
     max-width: 100%;
@@ -498,7 +499,7 @@
   }
 
   @media (max-width: 540px) {
-    .routine-card { flex-direction: column; gap: 8px; }
+    .routine-card { flex-direction: column; align-items: stretch; gap: 8px; }
     .routine-time-col { text-align: left; }
     .timeline::before { left: 20px; }
     .dot-col { width: 42px; }
