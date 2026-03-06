@@ -351,6 +351,15 @@
   .time-arrive {
     margin-top: 0;
   }
+  .reminder-btn {
+    margin-top: 0;
+    width: 26px;
+    height: 26px;
+    align-self: center;
+  }
+  .reminder-btn-label {
+    display: none;
+  }
   .awards-bar,
   .special-bar {
     margin-left: 0;
@@ -551,6 +560,66 @@
   .awards-cta-inner,
   .footer-bar {
     max-width: 100%;
+  }
+
+  /* ===== REMINDER / ADD-TO-CALENDAR BUTTON ===== */
+  .reminder-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    background: white;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 6px;
+    flex-shrink: 0;
+    padding: 0;
+    -webkit-appearance: none;
+  }
+  .reminder-btn:hover {
+    background: var(--soft-pink);
+    color: var(--rose);
+    border-color: var(--rose);
+  }
+  .reminder-btn svg {
+    width: 13px;
+    height: 13px;
+    max-width: none;
+    pointer-events: none;
+  }
+  .reminder-btn-label {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+    text-align: center;
+    opacity: 0.7;
+  }
+  .reminder-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--deep);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .reminder-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
   }
 
 </style>
@@ -1510,6 +1579,161 @@
 
   filterAll();
   updateCounts();
+
+  /* ===== REMINDER / ADD-TO-CALENDAR ===== */
+  (function initReminders() {
+    // Toast element
+    var toast = document.createElement('div');
+    toast.className = 'reminder-toast';
+    toast.id = 'reminderToast';
+    document.body.appendChild(toast);
+
+    // Inject bell button into each routine card's time column
+    document.querySelectorAll('.routine-row').forEach(function(row) {
+      var timeCol = row.querySelector('.routine-time-col');
+      var timeStage = row.querySelector('.time-stage');
+      if (!timeCol || !timeStage) return;
+      var timeText = timeStage.textContent.trim();
+      if (timeText === '\u2014' || !timeText) return; // Skip moved/empty routines
+
+      var btn = document.createElement('button');
+      btn.className = 'reminder-btn';
+      btn.title = 'Add to calendar with reminder';
+      btn.setAttribute('aria-label', 'Add to calendar with reminder');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        downloadICS(row);
+      });
+      timeCol.appendChild(btn);
+
+      var label = document.createElement('div');
+      label.className = 'reminder-btn-label';
+      label.textContent = 'Remind';
+      timeCol.appendChild(label);
+    });
+  })();
+
+  function downloadICS(row) {
+    var title = (row.querySelector('.routine-title') || {}).textContent || 'Routine';
+    title = title.trim();
+    var dancer = (row.querySelector('.routine-dancer') || {}).textContent || '';
+    dancer = dancer.trim();
+    var timeStage = (row.querySelector('.time-stage') || {}).textContent || '';
+    timeStage = timeStage.trim();
+    var timeArrive = (row.querySelector('.time-arrive') || {}).textContent || '';
+    timeArrive = timeArrive.trim();
+    var day = row.dataset.day;
+
+    var dateMap = { fri: '2026-03-06', sat: '2026-03-07', sun: '2026-03-08' };
+    var dateStr = dateMap[day];
+    if (!dateStr || !timeStage) return;
+
+    var localTime = parseTime12(timeStage);
+    if (!localTime) return;
+
+    var startDT = new Date(dateStr + 'T' + localTime);
+    var endDT = new Date(startDT.getTime() + 5 * 60 * 1000);
+
+    var summary = title + (dancer ? ' \u2014 ' + dancer : '');
+    var desc = 'Routine: ' + title +
+      (dancer ? '\\nDancer(s): ' + dancer : '') +
+      '\\nStage Time: ' + timeStage +
+      (timeArrive ? '\\n' + timeArrive : '') +
+      '\\n\\nAccelerate Dance Experience \\u2014 March 6\\u20138, 2026\\nStockbridge Theater \\u00b7 Pinkerton Academy \\u00b7 Derry, NH';
+    var location = 'Stockbridge Theater, Pinkerton Academy, 5 Pinkerton St, Derry, NH 03038';
+
+    var ics = buildICS(summary, desc, location, startDT, endDT, title);
+
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '_reminder.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Calendar event downloaded \u2014 open to add reminder');
+  }
+
+  function parseTime12(str) {
+    var m = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var min = m[2];
+    var ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return (h < 10 ? '0' : '') + h + ':' + min + ':00';
+  }
+
+  function fmtICS(d) {
+    var y = d.getFullYear();
+    var mo = d.getMonth() + 1;
+    var da = d.getDate();
+    var h = d.getHours();
+    var mi = d.getMinutes();
+    var s = d.getSeconds();
+    function p(n) { return n < 10 ? '0' + n : '' + n; }
+    return '' + y + p(mo) + p(da) + 'T' + p(h) + p(mi) + p(s);
+  }
+
+  function buildICS(summary, desc, location, start, end, title) {
+    var uid = 'adx-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '@afds';
+    var now = fmtICS(new Date());
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ADX Schedule//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VTIMEZONE',
+      'TZID:America/New_York',
+      'BEGIN:STANDARD',
+      'DTSTART:20261101T020000',
+      'RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11',
+      'TZOFFSETFROM:-0400',
+      'TZOFFSETTO:-0500',
+      'TZNAME:EST',
+      'END:STANDARD',
+      'BEGIN:DAYLIGHT',
+      'DTSTART:20260308T020000',
+      'RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3',
+      'TZOFFSETFROM:-0500',
+      'TZOFFSETTO:-0400',
+      'TZNAME:EDT',
+      'END:DAYLIGHT',
+      'END:VTIMEZONE',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + now,
+      'DTSTART;TZID=America/New_York:' + fmtICS(start),
+      'DTEND;TZID=America/New_York:' + fmtICS(end),
+      'SUMMARY:' + summary,
+      'DESCRIPTION:' + desc,
+      'LOCATION:' + location,
+      'BEGIN:VALARM',
+      'TRIGGER:-PT30M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Reminder: ' + title + ' starts in 30 minutes',
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT60M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Reminder: ' + title + ' starts in 1 hour',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('reminderToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
 </script>
 </body>
 </html>
