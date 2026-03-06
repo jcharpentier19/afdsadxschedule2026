@@ -378,7 +378,8 @@
     padding: 16px 20px;
   }
 }
-  .time-stage { font-size: 15px; font-weight: 600; color: var(--deep); font-variant-numeric: tabular-nums; }
+  .time-stage { font-size: 15px; font-weight: 600; color: var(--deep); font-variant-numeric: tabular-nums; transition: color 0.3s ease; }
+  .time-stage.time-shifted { color: #d35400; }
   .time-arrive { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 300; }
 
   .awards-bar {
@@ -1900,6 +1901,7 @@
 
       if (offset === 0) {
         el.textContent = orig;
+        el.classList.remove('time-shifted');
         return;
       }
 
@@ -1916,6 +1918,7 @@
       var h12 = h % 12;
       if (h12 === 0) h12 = 12;
       el.textContent = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+      el.classList.add('time-shifted');
     });
   }
 
