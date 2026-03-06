@@ -622,6 +622,131 @@
     opacity: 1;
   }
 
+  /* ===== DIRECTOR SCHEDULE-SHIFT PANEL ===== */
+  .shift-panel {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #ffffff;
+    border-top: 3px solid var(--rose);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+    padding: 16px 20px 22px;
+    text-align: center;
+  }
+  .shift-panel.visible { display: block; }
+  .shift-panel-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep);
+    margin-bottom: 4px;
+  }
+  .shift-panel-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .shift-panel-offset {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--rose);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 12px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .shift-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .shift-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--deep);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .shift-btn:active {
+    transform: scale(0.96);
+    background: var(--soft-pink);
+    border-color: var(--rose);
+  }
+  .shift-btn.shift-minus { color: var(--rose); }
+  .shift-btn.shift-plus  { color: #2e6b45; }
+  .shift-reset-btn {
+    display: none;
+    width: 100%;
+    max-width: 320px;
+    margin: 12px auto 0;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 2px solid var(--rose);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rose);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .shift-reset-btn.visible {
+    display: block;
+  }
+  .shift-reset-btn:active {
+    transform: scale(0.96);
+    background: var(--soft-pink);
+  }
+
+  /* push page content up so panel doesn't cover routines */
+  body.shift-mode { padding-bottom: 180px; }
+
+  @media (max-width: 480px) {
+    .shift-btn { min-width: 90px; padding: 12px 14px; font-size: 15px; }
+    .shift-panel { padding: 14px 12px 18px; }
+  }
+
+  /* ===== SCHEDULE UPDATED TIMESTAMP ===== */
+  .schedule-updated-banner {
+    display: none;
+    text-align: center;
+    padding: 10px 16px;
+    background: #fef9e7;
+    border: 1px solid #f0d660;
+    border-radius: 8px;
+    margin: 12px 20px 0;
+    font-size: 13px;
+    color: #5a4e00;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .schedule-updated-banner.visible {
+    display: block;
+  }
+  .schedule-updated-banner .updated-label {
+    font-weight: 600;
+  }
+
 </style>
 </head>
 <body>
@@ -654,6 +779,10 @@
         <input class="search-input" type="text" id="searchInput" placeholder="Search dancer or routine…" oninput="filterAll()">
       </div>
     </div>
+  </div>
+
+  <div class="schedule-updated-banner" id="scheduleUpdatedBanner">
+    <span class="updated-label">Schedule times updated</span> — <span id="updatedAtTime"></span>
   </div>
 
   <div class="section-label">Schedule by Day</div>
@@ -1512,6 +1641,20 @@
   <span style="display:block;margin-top:6px;color:#666">● Red left border = Title Contender &nbsp;·&nbsp; All times are approximate stage times · Check each routine for individual arrival times · Full dancer rosters from official PDF</span>
 </div>
 
+<!-- DIRECTOR SCHEDULE-SHIFT PANEL (hidden unless ?token= is present) -->
+<div class="shift-panel" id="shiftPanel">
+  <div class="shift-panel-label">Schedule Shift</div>
+  <div class="shift-panel-sub">Adjusts routine stage times only — arrival times stay fixed</div>
+  <div class="shift-panel-offset" id="shiftOffset">No change</div>
+  <div class="shift-btns">
+    <button class="shift-btn shift-minus" onclick="shiftSchedule(-5)">−5 min</button>
+    <button class="shift-btn shift-minus" onclick="shiftSchedule(-1)">−1 min</button>
+    <button class="shift-btn shift-plus"  onclick="shiftSchedule(1)">+1 min</button>
+    <button class="shift-btn shift-plus"  onclick="shiftSchedule(5)">+5 min</button>
+  </div>
+  <button class="shift-reset-btn" id="shiftResetBtn" onclick="shiftSchedule(0)">Reset to Original Times</button>
+</div>
+
 <script>
   let activeDay = 'all';
 
@@ -1733,6 +1876,149 @@
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
+
+  /* ===== SCHEDULE-SHIFT LOGIC (server-persisted for all users) ===== */
+
+  var _shiftTotal = 0; // cumulative minutes offset
+  var _isDirector = false;
+  var _directorToken = '';
+
+  // Store original stage times on first load (needed for ALL users)
+  document.querySelectorAll('.routine-row').forEach(function(row) {
+    var el = row.querySelector('.time-stage');
+    if (el) el.dataset.originalTime = el.textContent.trim();
+  });
+
+  // Apply a given offset to all stage times in the DOM
+  function applyShiftToDOM(offset) {
+    document.querySelectorAll('.routine-row').forEach(function(row) {
+      var el = row.querySelector('.time-stage');
+      if (!el || !el.dataset.originalTime) return;
+      var orig = el.dataset.originalTime;
+      if (orig === '\u2014' || !orig) return;
+
+      if (offset === 0) {
+        el.textContent = orig;
+        return;
+      }
+
+      var parsed = parseTime12(orig);
+      if (!parsed) return;
+
+      var parts = parsed.split(':');
+      var d = new Date(2026, 0, 1, parseInt(parts[0], 10), parseInt(parts[1], 10), 0);
+      d.setMinutes(d.getMinutes() + offset);
+
+      var h = d.getHours();
+      var m = d.getMinutes();
+      var ap = h >= 12 ? 'PM' : 'AM';
+      var h12 = h % 12;
+      if (h12 === 0) h12 = 12;
+      el.textContent = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+    });
+  }
+
+  // Show or hide the "Schedule times updated" banner
+  function updateBanner(offset, timestamp) {
+    var banner = document.getElementById('scheduleUpdatedBanner');
+    var timeSpan = document.getElementById('updatedAtTime');
+    if (!banner || !timeSpan) return;
+    if (offset === 0 || !timestamp) {
+      banner.classList.remove('visible');
+    } else {
+      timeSpan.textContent = timestamp;
+      banner.classList.add('visible');
+    }
+  }
+
+  // Fetch current shift from server and apply for ALL visitors
+  (function loadShiftForAll() {
+    fetch('/api/schedule-shift')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.offset && data.offset !== 0) {
+          _shiftTotal = data.offset;
+          applyShiftToDOM(_shiftTotal);
+          updateBanner(_shiftTotal, data.timestamp);
+          // If director, also sync the panel display
+          if (_isDirector) syncDirectorPanel();
+        }
+      })
+      .catch(function() { /* silently ignore — show original times */ });
+  })();
+
+  // Director-only: sync the shift panel display to current offset
+  function syncDirectorPanel() {
+    var label = document.getElementById('shiftOffset');
+    var resetBtn = document.getElementById('shiftResetBtn');
+    if (!label) return;
+    if (_shiftTotal === 0) {
+      label.textContent = 'No change';
+      label.style.color = 'var(--deep)';
+      if (resetBtn) resetBtn.classList.remove('visible');
+    } else {
+      var sign = _shiftTotal > 0 ? '+' : '';
+      label.textContent = sign + _shiftTotal + ' min';
+      label.style.color = _shiftTotal > 0 ? '#2e6b45' : 'var(--rose)';
+      if (resetBtn) resetBtn.classList.add('visible');
+    }
+  }
+
+  // Director-only: initialise the shift panel
+  (function initShiftPanel() {
+    var VALID_TOKEN = 'abc123';
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    if (token !== VALID_TOKEN) return;
+
+    _isDirector = true;
+    _directorToken = token;
+
+    document.getElementById('shiftPanel').classList.add('visible');
+    document.body.classList.add('shift-mode');
+
+    syncDirectorPanel();
+  })();
+
+  // Director action: shift the schedule and persist to server
+  function shiftSchedule(delta) {
+    if (delta === 0) {
+      _shiftTotal = 0;
+    } else {
+      _shiftTotal += delta;
+    }
+
+    // Update director panel display
+    syncDirectorPanel();
+
+    // Apply to DOM
+    applyShiftToDOM(_shiftTotal);
+
+    showToast('Stage times shifted ' + (_shiftTotal === 0 ? 'back to original' : (_shiftTotal > 0 ? '+' : '') + _shiftTotal + ' min'));
+
+    // Build timestamp
+    var stamp = null;
+    if (_shiftTotal !== 0) {
+      var now = new Date();
+      var opts = { hour: 'numeric', minute: '2-digit', hour12: true };
+      var dateOpts = { month: 'short', day: 'numeric' };
+      var timeStr = now.toLocaleTimeString('en-US', opts);
+      var dateStr = now.toLocaleDateString('en-US', dateOpts);
+      stamp = dateStr + ' at ' + timeStr;
+    }
+
+    // Update banner locally
+    updateBanner(_shiftTotal, stamp);
+
+    // Persist to server so ALL users see the shift
+    fetch('/api/schedule-shift?token=' + encodeURIComponent(_directorToken), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offset: _shiftTotal, timestamp: stamp })
+    }).catch(function() {
+      showToast('Warning: could not save shift to server');
+    });
   }
 </script>
 </body>
