@@ -748,6 +748,45 @@
     font-weight: 600;
   }
 
+  /* ===== PAST ROUTINES ===== */
+  .routine-row.past-routine { display: none !important; }
+  .routine-row.past-routine.show-past { display: flex !important; }
+  .routine-row.past-routine.show-past.hidden { display: none !important; }
+  .routine-row.past-routine.show-past .routine-card { opacity: 0.55; }
+
+  .past-toggle-bar {
+    display: none;
+    margin-bottom: 20px;
+  }
+  .past-toggle-bar.visible { display: block; }
+  .past-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .past-toggle-btn:hover { border-color: var(--blush); color: var(--rose); }
+  .past-toggle-btn.active { background: var(--soft-pink); border-color: var(--blush); color: var(--rose); }
+  .past-toggle-btn svg { width: 14px; height: 14px; }
+  .past-toggle-count {
+    background: #f0e0e0;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 20px;
+  }
+  .past-toggle-btn.active .past-toggle-count { background: var(--blush); color: var(--rose); }
+
 </style>
 </head>
 <body>
@@ -792,6 +831,14 @@
     <button class="day-tab" onclick="showDay('fri',this)">Friday<span class="tab-sub">March 6</span></button>
     <button class="day-tab" onclick="showDay('sat',this)">Saturday<span class="tab-sub">March 7</span></button>
     <button class="day-tab" onclick="showDay('sun',this)">Sunday<span class="tab-sub">March 8</span></button>
+  </div>
+
+  <div class="past-toggle-bar" id="pastToggleBar">
+    <button class="past-toggle-btn" id="pastToggleBtn" onclick="togglePastRoutines()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="pastToggleLabel">Show Past Routines</span>
+      <span class="past-toggle-count" id="pastToggleCount">0</span>
+    </button>
   </div>
 
   <!-- ===== FRIDAY ===== -->
@@ -1947,6 +1994,8 @@
           // If director, also sync the panel display
           if (_isDirector) syncDirectorPanel();
         }
+        // Re-check past routines after shift is applied
+        markPastRoutines();
       })
       .catch(function() { /* silently ignore — show original times */ });
   })();
@@ -1998,6 +2047,9 @@
     // Apply to DOM
     applyShiftToDOM(_shiftTotal);
 
+    // Re-check past routines after shift change
+    markPastRoutines();
+
     showToast('Stage times shifted ' + (_shiftTotal === 0 ? 'back to original' : (_shiftTotal > 0 ? '+' : '') + _shiftTotal + ' min'));
 
     // Build timestamp
@@ -2023,6 +2075,73 @@
       showToast('Warning: could not save shift to server');
     });
   }
+
+  /* ===== PAST ROUTINES LOGIC (15-minute grace period) ===== */
+
+  var _pastVisible = false;
+  var _dateMap = { fri: '2026-03-06', sat: '2026-03-07', sun: '2026-03-08' };
+
+  function markPastRoutines() {
+    var now = new Date();
+    var pastCount = 0;
+
+    document.querySelectorAll('.routine-row').forEach(function(row) {
+      var el = row.querySelector('.time-stage');
+      if (!el) return;
+
+      // Use the currently displayed time (accounts for director shift)
+      var timeText = el.textContent.trim();
+      if (timeText === '\u2014' || !timeText) return;
+
+      var day = row.dataset.day;
+      var dateStr = _dateMap[day];
+      if (!dateStr) return;
+
+      var parsed = parseTime12(timeText);
+      if (!parsed) return;
+
+      // Build full datetime for this routine and add 15-min grace
+      var routineTime = new Date(dateStr + 'T' + parsed);
+      var cutoff = new Date(routineTime.getTime() + 15 * 60 * 1000);
+
+      if (now > cutoff) {
+        row.classList.add('past-routine');
+        if (_pastVisible) row.classList.add('show-past');
+        pastCount++;
+      } else {
+        row.classList.remove('past-routine', 'show-past');
+      }
+    });
+
+    // Update toggle bar visibility and count
+    var bar = document.getElementById('pastToggleBar');
+    var countEl = document.getElementById('pastToggleCount');
+    var labelEl = document.getElementById('pastToggleLabel');
+    if (bar) bar.classList.toggle('visible', pastCount > 0);
+    if (countEl) countEl.textContent = pastCount;
+    if (labelEl) labelEl.textContent = _pastVisible ? 'Hide Past Routines' : 'Show Past Routines';
+
+    updateCounts();
+  }
+
+  function togglePastRoutines() {
+    _pastVisible = !_pastVisible;
+    var btn = document.getElementById('pastToggleBtn');
+    if (btn) btn.classList.toggle('active', _pastVisible);
+
+    document.querySelectorAll('.routine-row.past-routine').forEach(function(row) {
+      row.classList.toggle('show-past', _pastVisible);
+    });
+
+    var labelEl = document.getElementById('pastToggleLabel');
+    if (labelEl) labelEl.textContent = _pastVisible ? 'Hide Past Routines' : 'Show Past Routines';
+
+    updateCounts();
+  }
+
+  // Run on load and then every 60 seconds
+  markPastRoutines();
+  setInterval(markPastRoutines, 60000);
 </script>
 </body>
 </html>
