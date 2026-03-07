@@ -773,6 +773,12 @@
   .routine-row.past-routine.show-past { display: flex !important; }
   .routine-row.past-routine.show-past.hidden { display: none !important; }
   .routine-row.past-routine.show-past .routine-card { opacity: 0.55; }
+  .awards-bar.past-ceremony, .special-bar.past-ceremony { display: none !important; }
+  .awards-bar.past-ceremony.show-past, .special-bar.past-ceremony.show-past { display: flex !important; opacity: 0.55; }
+  .session-header.past-session { display: none !important; }
+  .session-header.past-session.show-past { display: block !important; opacity: 0.55; }
+  .timeline.past-session { display: none !important; }
+  .timeline.past-session.show-past { display: block !important; }
 
   .past-toggle-bar {
     display: none;
@@ -894,7 +900,7 @@
       </div>
 
     </div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Awards Ceremony</div><div class="awards-bar-sub">Friday Evening · 9:21 PM</div></div></div>
+    <div class="awards-bar" data-day="fri" data-time="9:21 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Awards Ceremony</div><div class="awards-bar-sub">Friday Evening · 9:21 PM</div></div></div>
   </div>
 
   <!-- ===== SATURDAY ===== -->
@@ -1011,7 +1017,7 @@
       </div>
 
     </div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 1 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 1:05 PM</div></div></div>
+    <div class="awards-bar" data-day="sat" data-time="1:05 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 1 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 1:05 PM</div></div></div>
 
     <div class="session-header">Saturday Afternoon — Junior (Session 2) <span class="session-count" id="cnt-sat-aft"></span></div>
     <div class="timeline" id="grid-sat-aft">
@@ -1203,9 +1209,9 @@
       </div>
 
     </div>
-    <div class="special-bar"><span class="trophy">🎭</span><div><div class="special-bar-text">JR ADX Title Improv</div><div class="special-bar-sub">Saturday · 6:38 PM</div></div></div>
-    <div class="special-bar"><span class="trophy">🌟</span><div><div class="special-bar-text">12 &amp; Under Entertainment Showdown</div><div class="special-bar-sub">Saturday · 7:03 PM</div></div></div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 2 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 7:28 PM</div></div></div>
+    <div class="special-bar" data-day="sat" data-time="6:38 PM"><span class="trophy">🎭</span><div><div class="special-bar-text">JR ADX Title Improv</div><div class="special-bar-sub">Saturday · 6:38 PM</div></div></div>
+    <div class="special-bar" data-day="sat" data-time="7:03 PM"><span class="trophy">🌟</span><div><div class="special-bar-text">12 &amp; Under Entertainment Showdown</div><div class="special-bar-sub">Saturday · 7:03 PM</div></div></div>
+    <div class="awards-bar" data-day="sat" data-time="7:28 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 2 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 7:28 PM</div></div></div>
 
     <div class="session-header">Saturday Evening — Senior (Session 3) <span class="session-count" id="cnt-sat-eve"></span></div>
     <div class="timeline" id="grid-sat-eve">
@@ -1237,7 +1243,7 @@
       </div>
 
     </div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 3 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 9:25 PM</div></div></div>
+    <div class="awards-bar" data-day="sat" data-time="9:25 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 3 Awards Ceremony</div><div class="awards-bar-sub">Saturday · 9:25 PM</div></div></div>
 
   </div><!-- end sat panel -->
 
@@ -1352,8 +1358,8 @@
       </div>
 
     </div>
-    <div class="special-bar"><span class="trophy">🎭</span><div><div class="special-bar-text">ADX Teen Title Improv</div><div class="special-bar-sub">Sunday · 1:08 PM</div></div></div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 1 Awards Ceremony</div><div class="awards-bar-sub">Sunday · 1:40 PM</div></div></div>
+    <div class="special-bar" data-day="sun" data-time="1:08 PM"><span class="trophy">🎭</span><div><div class="special-bar-text">ADX Teen Title Improv</div><div class="special-bar-sub">Sunday · 1:08 PM</div></div></div>
+    <div class="awards-bar" data-day="sun" data-time="1:40 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Session 1 Awards Ceremony</div><div class="awards-bar-sub">Sunday · 1:40 PM</div></div></div>
 
     <div class="session-header">Sunday Afternoon — Senior &amp; Teen Advanced (Session 2) <span class="session-count" id="cnt-sun-aft"></span></div>
     <div class="timeline" id="grid-sun-aft">
@@ -1666,9 +1672,9 @@
       </div>
 
     </div>
-    <div class="special-bar"><span class="trophy">🎭</span><div><div class="special-bar-text">ADX Senior Title Improv</div><div class="special-bar-sub">Sunday · 6:50 PM</div></div></div>
-    <div class="special-bar"><span class="trophy">🌟</span><div><div class="special-bar-text">13 &amp; Over Entertainment Showdown</div><div class="special-bar-sub">Sunday · 7:11 PM</div></div></div>
-    <div class="awards-bar"><span class="trophy">🏆</span><div><div class="awards-bar-text">Final Awards Ceremony</div><div class="awards-bar-sub">Sunday · 7:36 PM</div></div></div>
+    <div class="special-bar" data-day="sun" data-time="6:50 PM"><span class="trophy">🎭</span><div><div class="special-bar-text">ADX Senior Title Improv</div><div class="special-bar-sub">Sunday · 6:50 PM</div></div></div>
+    <div class="special-bar" data-day="sun" data-time="7:11 PM"><span class="trophy">🌟</span><div><div class="special-bar-text">13 &amp; Over Entertainment Showdown</div><div class="special-bar-sub">Sunday · 7:11 PM</div></div></div>
+    <div class="awards-bar" data-day="sun" data-time="7:36 PM"><span class="trophy">🏆</span><div><div class="awards-bar-text">Final Awards Ceremony</div><div class="awards-bar-sub">Sunday · 7:36 PM</div></div></div>
 
   </div><!-- end sun panel -->
 
@@ -1959,6 +1965,11 @@
     if (el) el.dataset.originalTime = el.textContent.trim();
   });
 
+  // Store original times for ceremony/special bars
+  document.querySelectorAll('.awards-bar[data-time], .special-bar[data-time]').forEach(function(bar) {
+    bar.dataset.originalTime = bar.dataset.time;
+  });
+
   // Apply a given offset to all stage times in the DOM
   function applyShiftToDOM(offset) {
     document.querySelectorAll('.routine-row').forEach(function(row) {
@@ -1987,6 +1998,36 @@
       if (h12 === 0) h12 = 12;
       el.textContent = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
       el.classList.add('time-shifted');
+    });
+
+    // Also shift ceremony/special bar times
+    document.querySelectorAll('.awards-bar[data-time], .special-bar[data-time]').forEach(function(bar) {
+      var orig = bar.dataset.originalTime;
+      if (!orig) return;
+
+      if (offset === 0) {
+        bar.dataset.time = orig;
+        var sub = bar.querySelector('.awards-bar-sub') || bar.querySelector('.special-bar-sub');
+        if (sub) sub.textContent = sub.textContent.replace(/\d{1,2}:\d{2}\s*(AM|PM)/i, orig);
+        return;
+      }
+
+      var parsed = parseTime12(orig);
+      if (!parsed) return;
+
+      var parts = parsed.split(':');
+      var d = new Date(2026, 0, 1, parseInt(parts[0], 10), parseInt(parts[1], 10), 0);
+      d.setMinutes(d.getMinutes() + offset);
+
+      var h = d.getHours();
+      var m = d.getMinutes();
+      var ap = h >= 12 ? 'PM' : 'AM';
+      var h12 = h % 12;
+      if (h12 === 0) h12 = 12;
+      var newTime = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+      bar.dataset.time = newTime;
+      var sub = bar.querySelector('.awards-bar-sub') || bar.querySelector('.special-bar-sub');
+      if (sub) sub.textContent = sub.textContent.replace(/\d{1,2}:\d{2}\s*(AM|PM)/i, newTime);
     });
   }
 
@@ -2134,6 +2175,70 @@
       }
     });
 
+    // Mark past ceremony/special bars (same 15-min grace)
+    document.querySelectorAll('.awards-bar[data-time], .special-bar[data-time]').forEach(function(bar) {
+      var timeText = bar.dataset.time;
+      if (!timeText) return;
+
+      var day = bar.dataset.day;
+      var dateStr = _dateMap[day];
+      if (!dateStr) return;
+
+      var parsed = parseTime12(timeText);
+      if (!parsed) return;
+
+      var barTime = new Date(dateStr + 'T' + parsed);
+      var cutoff = new Date(barTime.getTime() + 15 * 60 * 1000);
+
+      if (now > cutoff) {
+        bar.classList.add('past-ceremony');
+        if (_pastVisible) bar.classList.add('show-past');
+      } else {
+        bar.classList.remove('past-ceremony', 'show-past');
+      }
+    });
+
+    // Hide session headers and timelines when all their routines are past
+    document.querySelectorAll('.session-header').forEach(function(header) {
+      var timeline = header.nextElementSibling;
+      if (!timeline || !timeline.classList.contains('timeline')) return;
+
+      var rows = timeline.querySelectorAll('.routine-row');
+      if (rows.length === 0) return;
+
+      var allPast = true;
+      rows.forEach(function(row) {
+        // Skip moved routines (time is a dash) — treat them as past
+        var el = row.querySelector('.time-stage');
+        if (el && el.textContent.trim() !== '\u2014' && !row.classList.contains('past-routine')) {
+          allPast = false;
+        }
+      });
+
+      // Also check if the trailing ceremony/special bars are all past
+      if (allPast) {
+        var sibling = timeline.nextElementSibling;
+        while (sibling && (sibling.classList.contains('awards-bar') || sibling.classList.contains('special-bar'))) {
+          if (!sibling.classList.contains('past-ceremony')) {
+            allPast = false;
+          }
+          sibling = sibling.nextElementSibling;
+        }
+      }
+
+      if (allPast) {
+        header.classList.add('past-session');
+        timeline.classList.add('past-session');
+        if (_pastVisible) {
+          header.classList.add('show-past');
+          timeline.classList.add('show-past');
+        }
+      } else {
+        header.classList.remove('past-session', 'show-past');
+        timeline.classList.remove('past-session', 'show-past');
+      }
+    });
+
     // Update toggle bar visibility and count
     var bar = document.getElementById('pastToggleBar');
     var countEl = document.getElementById('pastToggleCount');
@@ -2152,6 +2257,14 @@
 
     document.querySelectorAll('.routine-row.past-routine').forEach(function(row) {
       row.classList.toggle('show-past', _pastVisible);
+    });
+
+    document.querySelectorAll('.awards-bar.past-ceremony, .special-bar.past-ceremony').forEach(function(bar) {
+      bar.classList.toggle('show-past', _pastVisible);
+    });
+
+    document.querySelectorAll('.session-header.past-session, .timeline.past-session').forEach(function(el) {
+      el.classList.toggle('show-past', _pastVisible);
     });
 
     var labelEl = document.getElementById('pastToggleLabel');
