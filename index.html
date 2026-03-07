@@ -347,8 +347,15 @@
     display: flex;
     align-items: baseline;
     gap: 10px;
+    flex-wrap: wrap;
   }
   .time-arrive {
+    margin-top: 0;
+  }
+  .time-estimated-label {
+    display: none;
+  }
+  .time-scheduled {
     margin-top: 0;
   }
   .reminder-btn {
@@ -380,6 +387,8 @@
 }
   .time-stage { font-size: 15px; font-weight: 600; color: var(--deep); font-variant-numeric: tabular-nums; transition: color 0.3s ease; white-space: nowrap; }
   .time-stage.time-shifted { color: #d35400; }
+  .time-scheduled { font-size: 11px; color: var(--muted); margin-top: 1px; font-weight: 400; white-space: nowrap; text-decoration: line-through; }
+  .time-estimated-label { font-size: 10px; color: #d35400; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 1px; white-space: nowrap; }
   .time-arrive { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 300; white-space: nowrap; }
 
   .awards-bar {
@@ -1978,6 +1987,13 @@
       var orig = el.dataset.originalTime;
       if (orig === '\u2014' || !orig) return;
 
+      // Remove any previously injected scheduled-time or estimated-label elements
+      var timeCol = el.parentElement;
+      var oldSched = timeCol.querySelector('.time-scheduled');
+      if (oldSched) oldSched.remove();
+      var oldLabel = timeCol.querySelector('.time-estimated-label');
+      if (oldLabel) oldLabel.remove();
+
       if (offset === 0) {
         el.textContent = orig;
         el.classList.remove('time-shifted');
@@ -1996,8 +2012,23 @@
       var ap = h >= 12 ? 'PM' : 'AM';
       var h12 = h % 12;
       if (h12 === 0) h12 = 12;
-      el.textContent = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+      var newTime = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+
+      // Show "Est." label above the shifted time
+      var estLabel = document.createElement('div');
+      estLabel.className = 'time-estimated-label';
+      estLabel.textContent = 'Est.';
+      timeCol.insertBefore(estLabel, el);
+
+      // Update stage time to the estimated time
+      el.textContent = newTime;
       el.classList.add('time-shifted');
+
+      // Show original scheduled time below with strikethrough
+      var schedEl = document.createElement('div');
+      schedEl.className = 'time-scheduled';
+      schedEl.textContent = orig;
+      timeCol.insertBefore(schedEl, el.nextSibling);
     });
 
     // Also shift ceremony/special bar times
