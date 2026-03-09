@@ -1047,6 +1047,105 @@
     .award-toggle-btn { font-size: 12px; padding: 7px 14px; }
   }
 
+  /* Welcome Modal */
+  .welcome-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    animation: fadeInOverlay 0.4s ease forwards;
+  }
+  @keyframes fadeInOverlay {
+    to { opacity: 1; }
+  }
+  @keyframes slideUpModal {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .welcome-modal {
+    background: linear-gradient(135deg, #fff8f8, #fff0f0, #fff8f8);
+    border-radius: 20px;
+    max-width: 520px;
+    width: 100%;
+    padding: 40px 32px 32px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border);
+    text-align: center;
+    animation: slideUpModal 0.5s ease 0.1s both;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .welcome-modal .modal-close-x {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .welcome-modal .modal-close-x:hover {
+    background: var(--soft-pink);
+    color: var(--rose);
+  }
+  .welcome-modal .modal-logo {
+    max-width: 220px;
+    width: 70%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+  .welcome-modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.25rem, 3vw, 1.6rem);
+    color: var(--rose);
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+  .welcome-modal p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.97rem;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+  .welcome-modal .modal-signoff {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-top: 8px;
+    margin-bottom: 24px;
+  }
+  .welcome-modal .modal-close-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--rose), #e03355);
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(204, 17, 34, 0.3);
+  }
+  .welcome-modal .modal-close-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(204, 17, 34, 0.4);
+  }
+
 </style>
 </head>
 <body>
@@ -2679,6 +2778,36 @@
   // Run on load and then every 60 seconds
   markPastRoutines();
   setInterval(markPastRoutines, 60000);
+</script>
+
+<!-- Welcome Popup Modal -->
+<div class="welcome-overlay" id="welcomeModal" onclick="closeWelcomeModal(event)">
+  <div class="welcome-modal" onclick="event.stopPropagation()">
+    <button class="modal-close-x" onclick="closeWelcomeModal()" aria-label="Close">&times;</button>
+    <img src="AFDS_RECTANGLE_1500px.jpg" alt="A Fine Dance Studio Logo" class="modal-logo">
+    <h2>Thank You for an Amazing Dance Accelerator Weekend! 💃✨</h2>
+    <p>
+      To our incredible dancers, dedicated teachers, and supportive families — thank you from the bottom of our hearts ❤️ for making this year's Dance Accelerator truly unforgettable.
+    </p>
+    <p>
+      Every leap, every turn, and every moment on that stage reflected the hours of hard work, passion, and commitment you've each poured into your craft. We are so deeply proud of each and every one of you 🩷
+    </p>
+    <p>
+      This weekend was a celebration of everything that makes our dance community so special — the joy, the teamwork, the courage to shine ✨ You all showed up and gave it your absolute best, and it was beautiful to witness 💃
+    </p>
+    <p class="modal-signoff">
+      With Love,<br>Miss Abigail &amp; the entire A Fine Dance Studio Team ❤️
+    </p>
+    <button class="modal-close-btn" onclick="closeWelcomeModal()">Close with gratitude 💕</button>
+  </div>
+</div>
+
+<script>
+function closeWelcomeModal(e) {
+  if (e && e.target && e.target !== document.getElementById('welcomeModal')) return;
+  var modal = document.getElementById('welcomeModal');
+  if (modal) modal.style.display = 'none';
+}
 </script>
 </body>
 </html>
